@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Gate</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+  :root{
+    --bg: #08050f;
+    --panel: #120a1f;
+    --panel-edge: #2e1c48;
+    --ink: #f1ecfa;
+    --ink-dim: #9c8bc0;
+    --amber: #a855f7;
+    --amber-dim: #4c2a73;
+    --red: #e0596b;
+    --green: #6fd19a;
+    --radius: 4px;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    background:
+      radial-gradient(circle at 20% -10%, #241536 0%, transparent 45%),
+      radial-gradient(circle at 85% 110%, #1a0f2e 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  #stars{
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .stage{ position: relative; z-index: 1; }
+
+  .bg-watermark{
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: clamp(32px, 6vw, 72px);
+    letter-spacing: 0.02em;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(168,85,247,0.18);
+    white-space: nowrap;
+    user-select: none;
+    will-change: transform;
+  }
+  @media (max-width: 760px){
+    .bg-watermark{ font-size: clamp(22px, 8vw, 40px); }
+  }
+
+  .stage{
+    width: 100%;
+    max-width: 920px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 0;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.6);
+  }
+
+  @media (max-width: 760px){
+    .stage{ grid-template-columns: 1fr; }
+  }
+
+  /* ---- left: badge / info panel ---- */
+  .left{
+    padding: 40px 36px;
+    border-right: 1px solid var(--panel-edge);
+    background:
+      repeating-linear-gradient(135deg, rgba(168,85,247,0.04) 0px, rgba(168,85,247,0.04) 1px, transparent 1px, transparent 14px),
+      #0e081a;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  @media (max-width: 760px){ .left{ border-right:none; border-bottom:1px solid var(--panel-edge);} }
+
+  .eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before{
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    box-shadow: 0 0 8px 1px var(--amber);
+  }
+
+  h1{
+    font-size: 30px;
+    line-height: 1.15;
+    margin: 18px 0 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .sub{
+    color: var(--ink-dim);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 34ch;
+  }
+
+  .badge-visual{
+    margin-top: 34px;
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    padding: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    background: #0c0716;
+    position: relative;
+  }
+  .badge-visual .row{
+    display:flex; justify-content: space-between;
+    font-size: 11px; color: var(--ink-dim); margin-bottom: 6px;
+  }
+  .badge-visual .id{
+    font-size: 15px; color: var(--ink); letter-spacing: 0.06em;
+  }
+  .badge-visual .stripe{
+    margin-top: 14px;
+    height: 22px;
+    border-radius: 3px;
+    background: repeating-linear-gradient(90deg, #2c2c40 0 2px, #1a1a26 2px 4px);
+  }
+
+  .footnote{
+    margin-top: 28px;
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.6;
+  }
+
+  /* ---- right: interactive gate ---- */
+  .right{
+    padding: 40px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .tabs{
+    display: flex;
+    gap: 4px;
+    margin-bottom: 26px;
+    background: #0c0716;
+    border: 1px solid var(--panel-edge);
+    border-radius: 6px;
+    padding: 3px;
+  }
+  .tab{
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-dim);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+  }
+  .tab.active{
+    background: var(--panel-edge);
+    color: var(--ink);
+  }
+
+  label{
+    display:block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+
+  input[type="text"]{
+    width: 100%;
+    background: #0d0817;
+    border: 1px solid var(--panel-edge);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    padding: 13px 14px;
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="text"]:focus{
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.15);
+  }
+
+  button.primary{
+    margin-top: 14px;
+    width: 100%;
+    padding: 13px 14px;
+    background: var(--amber);
+    color: #1c0f2b;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform .1s ease, filter .15s ease;
+  }
+  button.primary:hover{ filter: brightness(1.08); }
+  button.primary:active{ transform: scale(0.99); }
+
+  .status{
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid;
+  }
+  .status.show{ display: flex; }
+  .status.ok{ color: var(--green); border-color: rgba(111,209,154,0.35); background: rgba(111,209,154,0.06); }
+  .status.err{ color: var(--red); border-color: rgba(224,89,107,0.35); background: rgba(224,89,107,0.06); }
+
+  .panel-view{ display:none; }
+  .panel-view.active{ display:block; }
+
+  /* admin */
+  .key-list{
+    display:flex; flex-direction:column; gap:8px;
+    margin-top: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .key-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:#0d0817; border:1px solid var(--panel-edge);
+    border-radius: var(--radius); padding: 9px 12px;
+    font-family:'JetBrains Mono', monospace; font-size: 12.5px;
+  }
+  .key-row .k{ color: var(--ink); letter-spacing:0.05em; }
+  .key-row .actions{ display:flex; gap:10px; }
+  .key-row button{
+    background:none; border:none; color: var(--ink-dim);
+    font-family:'JetBrains Mono', monospace; font-size: 11px;
+    cursor:pointer; text-decoration: underline; padding:0;
+  }
+  .key-row button:hover{ color: var(--ink); }
+
+  .gen-row{ display:flex; gap:8px; margin-top: 16px; }
+  .gen-row button{
+    flex:1;
+    background:#0d0817; border:1px solid var(--panel-edge); color: var(--ink);
+    font-family:'JetBrains Mono', monospace; font-size: 12px;
+    padding: 10px; border-radius: var(--radius); cursor:pointer;
+  }
+  .gen-row button:hover{ border-color: var(--amber); color: var(--amber); }
+
+  .empty{
+    color: var(--ink-dim); font-family:'JetBrains Mono', monospace;
+    font-size: 12px; padding: 14px 0;
+  }
+
+  .unlock-success{
+    text-align:center; padding: 6px 0 2px;
+  }
+  /* step checklist */
+  .steps{
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .step{
+    display:flex; align-items:center; gap:12px;
+    background:#0d0817; border:1px solid var(--panel-edge);
+    border-radius: var(--radius); padding: 12px 14px;
+    transition: border-color .15s ease;
+  }
+  .step.done{ border-color: rgba(111,209,154,0.4); }
+  .step .num{
+    font-family:'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-dim);
+    width: 20px; height:20px; flex-shrink:0;
+    border: 1px solid var(--panel-edge); border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .step.done .num{ color: var(--green); border-color: rgba(111,209,154,0.5); }
+  .step .txt{ flex:1; }
+  .step .title{ font-size: 13.5px; font-weight: 600; }
+  .step .desc{ font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
+  .step .go{
+    font-family:'JetBrains Mono', monospace; font-size: 11px;
+    background: none; border: 1px solid var(--panel-edge); color: var(--ink);
+    padding: 7px 12px; border-radius: var(--radius); cursor: pointer;
+    white-space: nowrap;
+  }
+  .step .go:hover{ border-color: var(--amber); color: var(--amber); }
+  .step.done .go{ border-color: rgba(111,209,154,0.4); color: var(--green); }
+
+  .lifetime-tag{
+    display:inline-block;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 9.5px; letter-spacing: 0.08em;
+    color: #1c0f2b; background: var(--amber);
+    padding: 2px 6px; border-radius: 3px;
+    margin-left: 8px; vertical-align: middle;
+  }
+
+  .lifetime-tag.lifetime{
+    background: linear-gradient(90deg, #d8b4fe, var(--amber));
+  }
+
+  .special-row{
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--panel-edge);
+  }
+  .or-line{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.15em;
+    color: var(--ink-dim); text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .special-row label{ margin-bottom: 8px; }
+  .special-input-row{ display:flex; gap:8px; }
+  .special-input-row input{
+    flex:1;
+    background: #0d0817; border:1px solid var(--panel-edge); color: var(--ink);
+    font-family:'JetBrains Mono', monospace; font-size: 13px;
+    padding: 10px 12px; border-radius: var(--radius); outline:none;
+    letter-spacing: 0.06em;
+  }
+  .special-input-row input:focus{ border-color: var(--amber); }
+  .special-input-row button{
+    background: none; border: 1px solid var(--amber-dim); color: var(--amber);
+    font-family:'JetBrains Mono', monospace; font-size: 12px;
+    padding: 10px 14px; border-radius: var(--radius); cursor:pointer;
+    white-space: nowrap;
+  }
+  .special-input-row button:hover{ background: rgba(168,85,247,0.1); }
+
+  .unlock-success .stamp{
+    display:inline-block;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 0.15em;
+    color: var(--green);
+    border: 1px solid rgba(111,209,154,0.4);
+    padding: 6px 12px; border-radius: 4px;
+    transform: rotate(-2deg);
+    animation: pop .25s ease;
+  }
+  @keyframes pop{ from{ opacity:0; transform: scale(0.85) rotate(-2deg);} to{opacity:1; transform: scale(1) rotate(-2deg);} }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="bg-watermark">[🗽] Chillax</div>
+
+<div class="stage">
+
+  <div class="left">
+    <div>
+      <div class="eyebrow">Access Control</div>
+      <h1>Complete the steps.<br>Get your key.</h1>
+      <p class="sub">Finish what's below to generate a key. Each one stays active for 24 hours, then you'll need to run through the steps again.</p>
+
+      <div class="badge-visual">
+        <div class="row"><span>ISSUED TO</span><span>BEARER</span></div>
+        <div class="id" id="badgeId">GATE // ●●●●●●●●</div>
+        <div class="stripe"></div>
+      </div>
+    </div>
+
+    <div class="footnote">
+      Keys are matched client-side against the list in the admin panel.<br>
+      Fine for a simple gate — not for protecting anything sensitive.
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="tabs">
+      <button class="tab active" data-tab="getkey">Get a Key</button>
+      <button class="tab" data-tab="admin">Manage Keys</button>
+    </div>
+
+    <!-- GET KEY VIEW -->
+    <div class="panel-view active" id="view-getkey">
+      <label>Complete each step to unlock</label>
+      <div class="steps" id="stepsList"></div>
+
+      <button class="primary" id="genKeyBtn" disabled>Complete all steps to unlock</button>
+
+      <div class="status" id="getStatusBox"></div>
+
+      <div class="special-row">
+        <span class="or-line">or</span>
+        <label for="specialInput">Have a special code?</label>
+        <div class="special-input-row">
+          <input type="text" id="specialInput" placeholder="Enter code" autocomplete="off">
+          <button id="specialBtn">Redeem</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div class="panel-view" id="view-admin">
+      <label>Active keys (<span id="keyCount">0</span>) — 24h unless issued as lifetime</label>
+      <div class="key-list" id="keyList"></div>
+      <div class="gen-row">
+        <button id="genBtn">+ Generate key</button>
+        <button id="clearBtn">Clear all</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ---- starfield background ----
+  (function(){
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resize(){
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const count = Math.floor((canvas.width * canvas.height) / 6000);
+      stars = Array.from({ length: count }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.3,
+        baseAlpha: Math.random() * 0.5 + 0.3,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.015 + 0.005,
+        drift: Math.random() * 0.05 + 0.01,
+      }));
+    }
+
+    function tick(t){
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        const twinkle = Math.sin(t * s.speed + s.phase) * 0.5 + 0.5;
+        const alpha = s.baseAlpha * (0.4 + twinkle * 0.6);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(224,214,250,${alpha})`;
+        ctx.fill();
+        s.y += s.drift * 0.05;
+        if (s.y > canvas.height) s.y = 0;
+      });
+      requestAnimationFrame(tick);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(tick);
+  })();
+
+  // ---- floating "Chillax" watermark (DVD-logo style bounce) ----
+  (function(){
+    const el = document.querySelector('.bg-watermark');
+    let w = el.offsetWidth, h = el.offsetHeight;
+    let x = Math.random() * (window.innerWidth - w);
+    let y = Math.random() * (window.innerHeight - h);
+    let vx = 0.6, vy = 0.45;
+
+    function measure(){
+      w = el.offsetWidth;
+      h = el.offsetHeight;
+    }
+    window.addEventListener('resize', measure);
+    measure();
+
+    function tick(){
+      x += vx;
+      y += vy;
+      if (x <= 0){ x = 0; vx = Math.abs(vx); }
+      if (x + w >= window.innerWidth){ x = window.innerWidth - w; vx = -Math.abs(vx); }
+      if (y <= 0){ y = 0; vy = Math.abs(vy); }
+      if (y + h >= window.innerHeight){ y = window.innerHeight - h; vy = -Math.abs(vy); }
+      el.style.transform = `translate(${x}px, ${y}px) rotate(-6deg)`;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+
+  // In-memory key store (resets on reload — wire this to a real backend
+  // for real persistence). Each key carries its own 24h expiry.
+  let keys = []; // { value, expiresAt }
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  const tabs = document.querySelectorAll('.tab');
+  const views = {
+    getkey: document.getElementById('view-getkey'),
+    admin: document.getElementById('view-admin')
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      Object.values(views).forEach(v => v.classList.remove('active'));
+      views[tab.dataset.tab].classList.add('active');
+      if (tab.dataset.tab === 'admin') renderKeys();
+    });
+  });
+
+  function genKey(){
+    const seg = () => Math.random().toString(36).slice(2,6).toUpperCase();
+    return `${seg()}-${seg()}-${seg()}`;
+  }
+
+  function formatRemaining(ms){
+    if (ms <= 0) return 'expired';
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return `${h}h ${m}m left`;
+  }
+
+  // ---- Special code redemption ----
+  // Change this to whatever code you actually want to grant a lifetime key.
+  // Since this all runs client-side, anyone who reads the page source can
+  // see this value — don't treat it as real security (see notes below).
+  const SPECIAL_CODE = "CHILLAX SENT U";
+
+  document.getElementById('specialBtn').addEventListener('click', () => {
+    const input = document.getElementById('specialInput');
+    const val = input.value.trim().toUpperCase();
+    const box = document.getElementById('getStatusBox');
+    if (!val){
+      box.className = 'status show err';
+      box.innerHTML = 'Enter a code first.';
+      return;
+    }
+    if (val === SPECIAL_CODE){
+      const entry = { value: genKey(), expiresAt: null }; // null = never expires
+      keys.push(entry);
+      box.className = 'status show ok';
+      box.innerHTML = `
+        <div class="unlock-success" style="width:100%">
+          <span class="stamp">✓ CODE ACCEPTED</span>
+          <div style="margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:15px; letter-spacing:0.08em; background:#0d0817; border:1px solid var(--panel-edge); border-radius:4px; padding:10px 14px;">
+            ${entry.value}<span class="lifetime-tag lifetime">LIFETIME</span>
+          </div>
+          <div style="margin-top:8px; font-size:11px; color:var(--ink-dim);">This key never expires. Save it — it won't be shown again here.</div>
+        </div>`;
+      input.value = '';
+    } else {
+      box.className = 'status show err';
+      box.innerHTML = '✕ Code not recognized.';
+    }
+  });
+
+  // ---- "Get a Key" step gate ----
+  // Edit this list to match whatever your real steps are (join a Discord,
+  // follow a page, visit a link, etc). "href" is a placeholder — point it
+  // at your real destination.
+  const steps = [
+    { title: "Join the Discord server", desc: "Required to receive support and updates.", href: "#", done: false },
+    { title: "Follow the page", desc: "Helps others find the project.", href: "#", done: false },
+    { title: "Confirm you're human", desc: "Quick one-time check.", href: "#", done: false },
+  ];
+
+  function renderSteps(){
+    const list = document.getElementById('stepsList');
+    list.innerHTML = '';
+    steps.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'step' + (s.done ? ' done' : '');
+      row.innerHTML = `
+        <div class="num">${s.done ? '✓' : i + 1}</div>
+        <div class="txt">
+          <div class="title">${s.title}</div>
+          <div class="desc">${s.desc}</div>
+        </div>
+        <button class="go" data-i="${i}">${s.done ? 'Done' : 'Start'}</button>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = +btn.dataset.i;
+        if (steps[i].done) return;
+        window.open(steps[i].href, '_blank');
+        steps[i].done = true; // marks complete once they've clicked through
+        renderSteps();
+        updateGenButton();
+      });
+    });
+  }
+
+  function updateGenButton(){
+    const btn = document.getElementById('genKeyBtn');
+    const allDone = steps.every(s => s.done);
+    btn.disabled = !allDone;
+    btn.textContent = allDone ? 'Generate my key' : 'Complete all steps to unlock';
+  }
+
+  document.getElementById('genKeyBtn').addEventListener('click', () => {
+    if (!steps.every(s => s.done)) return;
+    const entry = { value: genKey(), expiresAt: Date.now() + DAY_MS };
+    keys.push(entry);
+    const box = document.getElementById('getStatusBox');
+    box.className = 'status show ok';
+    box.innerHTML = `
+      <div class="unlock-success" style="width:100%">
+        <span class="stamp">✓ KEY GENERATED</span>
+        <div style="margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:15px; letter-spacing:0.08em; background:#0d0817; border:1px solid var(--panel-edge); border-radius:4px; padding:10px 14px;">
+          ${entry.value}<span class="lifetime-tag">24H</span>
+        </div>
+        <div style="margin-top:8px; font-size:11px; color:var(--ink-dim);">Valid for 24 hours from now. Come back and complete the steps again once it expires.</div>
+      </div>`;
+  });
+
+  renderSteps();
+  updateGenButton();
+
+  function renderKeys(){
+    const list = document.getElementById('keyList');
+    document.getElementById('keyCount').textContent = keys.length;
+    list.innerHTML = '';
+    if (keys.length === 0){
+      list.innerHTML = '<div class="empty">No keys yet. Generate one to get started.</div>';
+      return;
+    }
+    keys.forEach((k, i) => {
+      const isLifetime = k.expiresAt === null;
+      const remaining = isLifetime ? null : k.expiresAt - Date.now();
+      const row = document.createElement('div');
+      row.className = 'key-row';
+      const tag = isLifetime
+        ? `<span class="lifetime-tag lifetime">LIFETIME</span>`
+        : `<span class="lifetime-tag">${remaining <= 0 ? 'EXPIRED' : formatRemaining(remaining)}</span>`;
+      row.innerHTML = `
+        <span class="k">${k.value}${tag}</span>
+        <div class="actions">
+          <button data-act="copy" data-i="${i}">copy</button>
+          <button data-act="del" data-i="${i}">remove</button>
+        </div>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = +btn.dataset.i;
+        if (btn.dataset.act === 'copy'){
+          navigator.clipboard.writeText(keys[i].value);
+          btn.textContent = 'copied';
+          setTimeout(() => btn.textContent = 'copy', 900);
+        } else {
+          keys.splice(i, 1);
+          renderKeys();
+        }
+      });
+    });
+  }
+
+  document.getElementById('genBtn').addEventListener('click', () => {
+    keys.push({ value: genKey(), expiresAt: Date.now() + DAY_MS });
+    renderKeys();
+  });
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    keys = [];
+    renderKeys();
+  });
+
+  // sweep out expired keys (lifetime keys are never swept) and refresh
+  // the countdown display every minute
+  setInterval(() => {
+    keys = keys.filter(k => k.expiresAt === null || k.expiresAt - Date.now() > 0);
+    if (views.admin.classList.contains('active')) renderKeys();
+  }, 60000);
+
+  renderKeys();
+</script>
+
+</body>
+</html>
