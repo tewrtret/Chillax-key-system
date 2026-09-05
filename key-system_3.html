@@ -562,8 +562,7 @@
   // Change this to whatever code you actually want to grant a lifetime key.
   // Since this all runs client-side, anyone who reads the page source can
   // see this value — don't treat it as real security (see notes below).
-  const SPECIAL_CODE = "Chillaxsentu";
-  const SPECIAL_CODE = "Chillax67";
+  const SPECIAL_CODES = ["CHILLAXSENTU", "CHILLAX67"];
 
   document.getElementById('specialBtn').addEventListener('click', () => {
     const input = document.getElementById('specialInput');
@@ -574,7 +573,7 @@
       box.innerHTML = 'Enter a code first.';
       return;
     }
-    if (val === SPECIAL_CODE){
+    if (SPECIAL_CODES.includes(val)){
       const entry = { value: genKey(), expiresAt: null }; // null = never expires
       keys.push(entry);
       box.className = 'status show ok';
